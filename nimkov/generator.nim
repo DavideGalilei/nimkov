@@ -4,14 +4,14 @@ import ./utils, ./constants, ./objects, ./typedefs
 randomize()
 
 # private fields moment
+# sorry, not anymore
 type MarkovGenerator* = ref object
-    samples: seq[string]
-    frames: seq[string]
-    model: TableRef[string, TableRef[string, int]]
+    samples*: seq[string]
+    frames*: seq[string]
+    model*: TableRef[string, TableRef[string, int]]
 
 iterator sampleToFrames(sample: string): string =
-    let words = unicodeStringToLower(sample)
-        .split(" ")
+    let words = sample.split(" ")
 
     yield mrkvStart
 
