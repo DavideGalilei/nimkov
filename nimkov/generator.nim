@@ -10,7 +10,9 @@ type MarkovGenerator* = ref object
     frames*: seq[string]
     model*: TableRef[string, TableRef[string, int]]
 
-iterator sampleToFrames(sample: string): string =
+iterator sampleToFrames(sample: string, asLower: bool = true): string =
+    let sample = if asLower: unicodeStringToLower(sample)
+      else: sample
     let words = sample.split(" ")
 
     yield mrkvStart
@@ -21,13 +23,13 @@ iterator sampleToFrames(sample: string): string =
 
     yield mrkvEnd
 
-proc addSample*(generator: MarkovGenerator, sample: string) =
+proc addSample*(generator: MarkovGenerator, sample: string, asLower: bool = true) =
     ## Adds string to samples.
     generator.samples.add(sample)
 
     let startIndex = generator.frames.high + 1
 
-    for frame in sampleToFrames(sample):
+    for frame in sampleToFrames(sample, asLower):
         generator.frames.add(frame)
 
     for i in startIndex..generator.frames.len:
