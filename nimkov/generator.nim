@@ -60,13 +60,13 @@ proc cleanSamples*(generator: MarkovGenerator) =
     generator.frames.setLen(0)
     generator.model.clear()
 
-proc newMarkov*(samples = newSeq[string]()): MarkovGenerator =
+proc newMarkov*(samples = newSeq[string](), asLower: bool = true): MarkovGenerator =
     ## Creates an instance of Markov generator.
     result = MarkovGenerator()
     result.model = newTable[string, TableRef[string, int]]()
 
     for sample in samples:
-        result.addSample(sample)
+        result.addSample(sample, asLower = asLower)
 
 proc generate*(generator: MarkovGenerator, options = newMarkovGenerateOptions()): Option[string] =
     ## Generates a string.
