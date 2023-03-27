@@ -8,7 +8,7 @@ randomize()
 type MarkovGenerator* = ref object
     samples*: seq[string]
     frames*: seq[string]
-    model: Table[string, Table[string, int]]
+    model*: Table[string, Table[string, int]]
 
 iterator sampleToFrames(sample: string, asLower: bool = true): string =
     let sample = if asLower: unicodeStringToLower(sample)
