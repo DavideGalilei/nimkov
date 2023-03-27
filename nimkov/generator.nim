@@ -1,4 +1,4 @@
-import tables, strutils, options, random
+import std/[tables, strutils, sequtils, options, random]
 import ./utils, ./constants, ./objects, ./typedefs
 
 randomize()
@@ -8,16 +8,15 @@ randomize()
 type MarkovGenerator* = ref object
     samples*: seq[string]
     frames*: seq[string]
-    model*: TableRef[string, TableRef[string, int]]
+    model: Table[string, Table[string, int]]
 
 iterator sampleToFrames(sample: string, asLower: bool = true): string =
     let sample = if asLower: unicodeStringToLower(sample)
       else: sample
-    let words = sample.split(" ")
 
     yield mrkvStart
 
-    for word in words:
+    for word in sample.split(" "):
         if word == mrkvStart or word == mrkvEnd: continue
         yield word
 
@@ -39,12 +38,9 @@ proc addSample*(generator: MarkovGenerator, sample: string, asLower: bool = true
         let nextFrame = generator.frames[i + 1]
 
         if currentFrame in generator.model:
-            if (nextFrame in generator.model[currentFrame]):
-                generator.model[currentFrame][nextFrame] += 1
-            else:
-                generator.model[currentFrame][nextFrame] = 1
+            generator.model[currentFrame].mgetOrPut(nextFrame, 0) += 1
         else:
-            generator.model[currentFrame] = newTable([(nextFrame, 1)])
+            generator.model[currentFrame] = {nextFrame: 1}.toTable
 
 proc addSample*(generator: MarkovGenerator, samples: seq[string]) =
     ## Adds seqence of strings to samples.
@@ -63,7 +59,7 @@ proc cleanSamples*(generator: MarkovGenerator) =
 proc newMarkov*(samples = newSeq[string](), asLower: bool = true): MarkovGenerator =
     ## Creates an instance of Markov generator.
     result = MarkovGenerator()
-    result.model = newTable[string, TableRef[string, int]]()
+    result.model = initTable[string, Table[string, int]]()
 
     for sample in samples:
         result.addSample(sample, asLower = asLower)
@@ -87,7 +83,7 @@ proc generate*(generator: MarkovGenerator, options = newMarkovGenerateOptions())
             if not generator.model.hasKey(currentFrame):
                 raise MarkovGenerateError.newException("Not enough samples to use \"" & beginningFrames[1..^1].join(" ") & "\" as a beginning argument")
 
-            let nextFrame = sample(generator.model[currentFrame].getRefTableKeys)
+            let nextFrame = sample(toSeq(generator.model[currentFrame].keys))
 
             attemptResult.add(nextFrame)
             currentFrame = nextFrame
